@@ -15,22 +15,6 @@ gpus = tf.config.experimental.list_physical_devices('GPU')
 for gpu in gpus:
     tf.config.experimental.set_memory_growth(gpu, True)
 
-plt.style.use('fivethirtyeight')
-
-
-# To plot predictions with actual values for comparision
-def plot_predictions(test, predicted):
-    f = plt.figure()
-    f.set_figwidth(20)
-    f.set_figheight(5)
-    plt.plot(test[0:250], color='red', label='True load Value')
-    plt.plot(predicted[0:250], color='blue', label='Predicted Load Value')
-    plt.title('Comparision of Forecast and Actual load ')
-    plt.xlabel('Time Indices')
-    plt.ylabel('KWH')
-    plt.legend()
-    plt.show()
-
 
 def split_series(series, n_past, n_future):
     #
@@ -75,12 +59,8 @@ print(Y_test)
 
 # reshaping train and test to feed to LSTM
 
-# Model
+# Models
 
-"""
-E1D1
-n_features ==> no of features at each timestep in the data.
-"""
 
 encoder_inputs = tf.keras.layers.Input(shape=(n_past, n_features))
 encoder_l1 = tf.keras.layers.LSTM(50, return_sequences=True, return_state=True, dropout=0.25)
@@ -102,10 +82,6 @@ seqtoseq_LSTM = tf.keras.models.Model(encoder_inputs, decoder_outputs2)
 seqtoseq_LSTM.compile(optimizer=tf.keras.optimizers.Adam(), loss='mae', metrics=["mape"])
 seqtoseq_LSTM.summary()
 
-"""
-E2D2
-n_features ==> no of features at each timestep in the data.
-"""
 
 encoder_inputs = tf.keras.layers.Input(shape=(n_past, n_features))
 encoder_l1 = tf.keras.layers.GRU(50, return_sequences=True, return_state=True)
@@ -170,12 +146,11 @@ pred_seqtoseq_GRU = pred_seqtoseq_GRU.reshape(pred_seqtoseq_GRU.shape[0], n_futu
 pred_oneshot_LSTM = oneshot_LSTM.predict(X_test)
 pred_oneshot_GRU = oneshot_GRU.predict(X_test)
 
-# # Inverse Normalise
+# Inverse Normalise
 # predictions = sc.inverse_transform(pred_e1d1)
 # final_test_Y = sc.inverse_transform(Y_test)
 
 # Check Error
-
 for j in range(1, n_future + 1):
     print("Time step ", j, ":")
     print("MAPE-seqtoseq_LSTM : ", mean_absolute_percentage_error(Y_test[:, j - 1], pred_seqtoseq_LSTM[:, j - 1]),
@@ -197,7 +172,7 @@ print("oneshot_GRU root_mean_squared_error : ", sqrt(mean_squared_error(Y_test, 
 
 
 # Plot
-
+plt.style.use('fivethirtyeight')
 def plot_predictions(test, predicted):
     f = plt.figure()
     f.set_figwidth(20)
@@ -210,18 +185,19 @@ def plot_predictions(test, predicted):
     plt.legend()
     plt.show()
 
-
 plot_predictions(Y_test[0], pred_seqtoseq_LSTM[0])
 plot_predictions(Y_test[0], pred_seqtoseq_GRU[0])
 plot_predictions(Y_test[0], pred_oneshot_LSTM[0])
 plot_predictions(Y_test[0], pred_oneshot_GRU[0])
 
-mean = 0
-for j in range(0,48):
-    for i in range(1,21):
-        mean = mean + mean_absolute_percentage_error(Y_test[(48*i)+j], Y_test[(48*(i-1))+j])
-mean = mean / (48*20)
-print(mean)
 
-for i in range(1,21):
-    print(mean_absolute_percentage_error(Y_test[48*i], Y_test[48*(i-1)]))
+
+# mean = 0
+# for j in range(0,48):
+#     for i in range(1,21):
+#         mean = mean + mean_absolute_percentage_error(Y_test[(48*i)+j], Y_test[(48*(i-1))+j])
+# mean = mean / (48*20)
+# print(mean)
+#
+# for i in range(1,21):
+#     print(mean_absolute_percentage_error(Y_test[48*i], Y_test[48*(i-1)]))
